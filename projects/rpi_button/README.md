@@ -6,7 +6,7 @@ This is one of the simplest things you can do to demonstrate a Raspberry Pi inte
 
 Press a button, something happens on the Pi!
 
-<img src="rpi_button.svg" alt="Example circuit" style="width: 500px"/>
+<img src="rpi_button.svg" alt="Graphic of the circuit" style="width: 500px"/>
 
 ## Code
 
