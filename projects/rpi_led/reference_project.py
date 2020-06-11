@@ -6,4 +6,4 @@ GPIO.setup(18, GPIO.OUT)
 GPIO.output(18, True)
 
 # You should run this manually when finished with input
-GPI.cleanup()
+GPIO.cleanup()
