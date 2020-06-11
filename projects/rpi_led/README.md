@@ -4,7 +4,7 @@ This is probably one of the simplest things you can do to demonstrate a Raspberr
 
 It connects the GPIO directly to the board but you could go via the power rail.
 
-<img src="rpi_led.svg" alt="Example circuit" style="width: 500px"/>
+<img src="rpi_led.svg" alt="Graphic of the circuit" style="width: 500px"/>
 
 ## Code
 

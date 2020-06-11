@@ -6,7 +6,7 @@ A 7 segment display is really just 7 LED's (8 if you have one with a decimal poi
 
 The wiring involves connecting each LED via a resistor to a GPIO pin. You then need a program which controls the output of each GPIO pin.
 
-<img src="rpi_seven_segment.svg" alt="Example circuit" style="width: 600px"/>
+<img src="rpi_seven_segment.svg" alt="Graphic of the circuit" style="width: 600px"/>
 
 ## 7 segment displays
 
@@ -30,47 +30,69 @@ In this all the positive terminals (Anodes) of all the LEDs are connected togeth
 
 This program will cycle through 0 to 9 with a 1 second pause until CTRL+C is pressed.
 
-It maps each digit (number) to a bit array. We'll need 7 bits to represent each segment `a` to `g`. A value of `1` means **on**, `0` means **off**.
-
-In this example the bit array has a length of 8 and the right most represents segment `a`. Check out these examples that illustrate this.
-
-- `0x00000001` Segment `a` is on
-- `0x00000110` Segments `b` and `c` are on
-- `0x01111111` All 7 segments (`a`-`g`) are on
+This is my version of the code provided in the [article](https://www.noumansaleem.com/avr/2018/08/11/seven-segment-display-raspberry-pi-python.html) I referenced for this project. A key difference is I ditched all the bit arrays and bitwise operations it was using for something much simpler (though arguably less elegant).
 
 ```python
-import time
 import RPi.GPIO as GPIO
+
+# Needed to allow the program to `sleep` for 1 second after displaying a digit.
+# Else the display will be more like a light show!
+import time
 
 GPIO.setmode(GPIO.BCM)
 
-digitBitmap = {0: 0b00111111, 1: 0b00000110, 2: 0b01011011, 3: 0b01001111, 4: 0b01100110,
-               5: 0b01101101, 6: 0b01111101, 7: 0b00000111, 8: 0b01111111, 9: 0b01100111}
-masks = {'a': 0b00000001, 'b': 0b00000010, 'c': 0b00000100,
-         'd': 0b00001000, 'e': 0b00010000, 'f': 0b00100000, 'g': 0b01000000}
+# Dictionary of GPIO pins used and the segment they correspond to
 pins = {'a': 17, 'b': 22, 'c': 6, 'd': 13, 'e': 19, 'f': 27, 'g': 5}
 
+# Dictionary of digits to display on the 7 segment display. For each
+# digit we hold an array of which segments need to be lit.
+digits = {
+    0: ['a', 'b', 'c', 'd', 'e', 'f'],
+    1: ['b', 'c'],
+    2: ['a', 'b', 'g', 'e', 'd'],
+    3: ['a', 'b', 'c', 'd', 'g'],
+    4: ['b', 'c', 'f', 'g'],
+    5: ['a', 'c', 'd', 'f', 'g'],
+    6: ['a', 'c', 'd', 'e', 'f', 'g'],
+    7: ['a', 'b', 'c'],
+    8: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+    9: ['a', 'b', 'c', 'f', 'g']
+}
 
-def renderChar(c):
-    val = digitBitmap[c]
 
+def renderDigit(digit):
+    # Turn off all the segments
     GPIO.output(list(pins.values()), GPIO.LOW)
 
-    for k, v in masks.items():
-        if val & v == v:
-            GPIO.output(pins[k], GPIO.HIGH)
+    # Get the array of segments that need switching on for this digit
+    digitSegments = digits[digit]
+
+    # Iterate through the array of segments, locate the corresponding GPIO pin
+    # and by setting it to GPIO.HIGH, turn on the segment
+    for segment in digitSegments:
+        GPIO.output(pins[segment], GPIO.HIGH)
 
 
 try:
+    # Tell RPi we won't be reading from the pins. Instead will be sending data
+    # out (by way of whether the voltage is high or low)
     GPIO.setup(list(pins.values()), GPIO.OUT)
+
+    # Turn off all the segments
     GPIO.output(list(pins.values()), GPIO.LOW)
 
-    val = 0
+    # Start by displaying 0
+    digit = 0
 
+    # Just keep looping until the CTRL+C is entered
     while True:
-        print("Printing " + str(val))
-        renderChar(val)
-        val = 0 if val == 9 else (val + 1)
+        renderDigit(digit)
+        print("Displaying " + str(digit))
+
+        # If digit is 9 reset to 0, else just add 1 to it
+        digit = 0 if digit == 9 else (digit + 1)
+
+        # Sleep for 1 second, to give us a chance to see the digit displayed
         time.sleep(1)
 except KeyboardInterrupt:
     print("Goodbye")
@@ -82,3 +104,9 @@ finally:
 ## Reference
 
 I mainly referred to [seven-segment-display-raspberry-pi-python](https://www.noumansaleem.com/avr/2018/08/11/seven-segment-display-raspberry-pi-python.html) for this project. It uses a 4 digit 7 segment display component though. So I also used [7 Segment displays](https://circuitdigest.com/article/7-segment-display) as a reference for the pin placement.
+
+## Proof!
+
+The actual circuit and code in operation.
+
+<img src="rpi_seven_segment.jpeg" alt="The actual display showing the number 4" style="width: 500px"/>
